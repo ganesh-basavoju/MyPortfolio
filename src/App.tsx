@@ -9,7 +9,6 @@ import Skills from './components/Skills'
 import Projects from './components/Projects'
 import Footer from './components/Footer'
 import Timeline from './components/Timeline'
-import YouTubeSection from './components/YouTubeSection'
 import GitHubSection from './components/GitHubSection'
 
 const App = () => {
@@ -37,7 +36,6 @@ const App = () => {
           <Skills />
           <Timeline />
           <GitHubSection />
-          
           <Footer />
           <ResumeButton />
         </>
