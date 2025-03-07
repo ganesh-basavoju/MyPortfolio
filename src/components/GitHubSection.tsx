@@ -1,8 +1,10 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 import { useState, useEffect } from 'react'
-import { motion  } from 'framer-motion'
+import { motion, AnimatePresence } from 'framer-motion'
 import { Element } from 'react-scroll'
-import { FaGithub } from 'react-icons/fa'
+import { FaGithub, FaStar, FaExternalLinkAlt } from 'react-icons/fa'
+import { BiGitRepoForked } from 'react-icons/bi'
+import { IoMdAnalytics} from 'react-icons/io'
 
 interface Repository {
   id: number
@@ -26,7 +28,8 @@ const GitHubSection = () => {
   const [repos, setRepos] = useState<Repository[]>([])
   const [stats, setStats] = useState<GitHubStats | null>(null)
   const [_loading, setLoading] = useState(true)
-  const [_selectedRepo] = useState<Repository | null>(null)
+  const [_selectedRepo, setSelectedRepo] = useState<Repository | null>(null)
+  const [filter, setFilter] = useState<string>('all')
   const username = 'ganesh-basavoju'
 
   useEffect(() => {
@@ -55,9 +58,20 @@ const GitHubSection = () => {
     fetchGitHubData()
   }, [])
 
-  
+  const languageColors: { [key: string]: string } = {
+    TypeScript: 'bg-blue-500',
+    JavaScript: 'bg-yellow-400',
+    Python: 'bg-green-500',
+    Java: 'bg-red-500',
+    HTML: 'bg-orange-500',
+    CSS: 'bg-pink-500',
+  }
 
-  
+  const languages = Array.from(new Set(repos.map(repo => repo.language).filter(Boolean)))
+
+  const filteredRepos = filter === 'all' 
+    ? repos 
+    : repos.filter(repo => repo.language === filter)
 
   return (
     <Element name="github" className="py-32 relative overflow-hidden bg-gradient-to-br from-orange-50 via-white to-orange-50">
@@ -144,9 +158,114 @@ const GitHubSection = () => {
           whileInView={{ opacity: 1, y: 0 }}
           className="flex flex-wrap justify-center gap-2 mb-8"
         >
-          
-          
+          <motion.button
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
+            onClick={() => setFilter('all')}
+            className={`px-4 py-2 rounded-full ${
+              filter === 'all' 
+                ? 'bg-gray-900 text-white' 
+                : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+            } transition-colors`}
+          >
+            All
+          </motion.button>
+          {languages.map(lang => (
+            <motion.button
+              key={lang}
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+              onClick={() => setFilter(lang)}
+              className={`px-4 py-2 rounded-full ${
+                filter === lang 
+                  ? 'bg-gray-900 text-white' 
+                  : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+              } transition-colors`}
+            >
+              {lang}
+            </motion.button>
+          ))}
         </motion.div>
+
+        {/* Repositories Grid */}
+        <motion.div 
+          layout
+          className="grid grid-cols-1 md:grid-cols-2 gap-6"
+        >
+          <AnimatePresence>
+            {filteredRepos.map((repo) => (
+              <motion.div
+                key={repo.id}
+                layout
+                initial={{ opacity: 0, scale: 0.9 }}
+                animate={{ opacity: 1, scale: 1 }}
+                exit={{ opacity: 0, scale: 0.9 }}
+                whileHover={{ y: -5 }}
+                transition={{ duration: 0.3 }}
+                className="bg-white p-6 rounded-lg shadow-md hover:shadow-xl transition-all"
+                onClick={() => setSelectedRepo(repo)}
+              >
+                <div className="flex items-start justify-between">
+                  <div>
+                    <h3 className="text-xl font-semibold text-gray-900 mb-2 flex items-center gap-2">
+                      {repo.name}
+                      <motion.span
+                        transition={{ duration: 2, repeat: Infinity, ease: "linear" }}
+                      >
+                        <IoMdAnalytics className="text-orange-500" />
+                      </motion.span>
+                    </h3>
+                    <p className="text-gray-600 mb-4 line-clamp-2">{repo.description}</p>
+                  </div>
+                  <motion.div whileHover={{ rotate: 360 }} transition={{ duration: 0.5 }}>
+                    <FaGithub className="text-2xl text-gray-700" />
+                  </motion.div>
+                </div>
+                
+                <div className="flex flex-wrap items-center gap-4">
+                  {repo.language && (
+                    <div className="flex items-center gap-1">
+                      <motion.span 
+                        className={`w-3 h-3 rounded-full ${languageColors[repo.language] || 'bg-gray-400'}`}
+                        animate={{ scale: [1, 1.2, 1] }}
+                        transition={{ duration: 2, repeat: Infinity }}
+                      />
+                      <span className="text-sm text-gray-600">{repo.language}</span>
+                    </div>
+                  )}
+                  <motion.div 
+                    className="flex items-center gap-1"
+                    whileHover={{ scale: 1.1 }}
+                  >
+                    <FaStar className="text-yellow-400" />
+                    <span className="text-sm text-gray-600">{repo.stargazers_count}</span>
+                  </motion.div>
+                  <motion.div 
+                    className="flex items-center gap-1"
+                    whileHover={{ scale: 1.1 }}
+                  >
+                    <BiGitRepoForked className="text-gray-600" />
+                    <span className="text-sm text-gray-600">{repo.forks_count}</span>
+                  </motion.div>
+                  {repo.homepage && (
+                    <motion.a
+                      href={repo.homepage}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="flex items-center gap-1 text-orange-500 hover:text-orange-600"
+                      whileHover={{ scale: 1.1 }}
+                    >
+                      <FaExternalLinkAlt className="text-sm" />
+                      <span className="text-sm">Live Demo</span>
+                    </motion.a>
+                  )}
+                </div>
+              </motion.div>
+            ))}
+          </AnimatePresence>
+        </motion.div>
+
+        {/* GitHub Profile Button */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
@@ -165,7 +284,6 @@ const GitHubSection = () => {
             View GitHub Profile
           </motion.a>
         </motion.div>
-        
       </div>
 
       {/* Subtle glass effect overlay */}
